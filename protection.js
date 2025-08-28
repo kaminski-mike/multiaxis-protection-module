@@ -54,7 +54,7 @@ const MultiaxisProtection = (function() {
         footerText: 'This human verification helps us maintain content quality and security.',
         
         // Accepted answers
-        acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS INTELLIGENCE'],
+        acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS AI'],
         
         // Session configuration
         sessionKey: 'multiaxis_protection',
@@ -481,4 +481,5 @@ document.addEventListener('DOMContentLoaded', function() {
         
         MultiaxisProtection.init(config);
     }
+
 });
