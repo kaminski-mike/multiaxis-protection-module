@@ -57,7 +57,7 @@ const MultiaxisProtection = (function() {
         acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS INTELLIGENCE'],
         
         // Safe Harbor configuration
-        enableSafeHarbor: false,
+        enableSafeHarbor: true,
         safeHarborTitle: 'Important Legal Notice',
         safeHarborDate: 'January 1, 2025',
         safeHarborText: null, // Will use default if not provided
@@ -711,3 +711,4 @@ document.addEventListener('DOMContentLoaded', function() {
         MultiaxisProtection.init(config);
     }
 });
+
