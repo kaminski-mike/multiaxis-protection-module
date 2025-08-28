@@ -2,9 +2,15 @@
 
 A lightweight, client-side JavaScript module that protects web content from automated AI scrapers and bots while maintaining accessibility for legitimate human users.
 
+**Version:** 1.0.0  
+**Author:** Mike Kaminski  
+**Company:** Multiaxis LLC  
+**License:** MIT  
+
 ## Features
 
 - 🛡️ **AI/Bot Protection**: Prevents automated scraping through human verification
+- ⚖️ **Safe Harbor Disclaimers**: Optional legal notices for forward-looking statements (NEW)
 - 🚀 **Zero Dependencies**: Pure JavaScript, no external libraries required
 - 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
 - 🎨 **Fully Customizable**: Extensive configuration options for text, styling, and behavior
@@ -108,8 +114,15 @@ MultiaxisProtection.init({
     // Accepted Answers (case-insensitive)
     acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS INTELLIGENCE'],
     
+    // Safe Harbor Configuration (NEW in v1.0.0)
+    enableSafeHarbor: false,                // Enable legal disclaimer step
+    safeHarborTitle: 'Important Legal Notice',
+    safeHarborDate: 'August 1, 2025',       // Expiration date for disclaimers
+    safeHarborText: null,                   // Custom legal text (uses default if null)
+    
     // Session Configuration
     sessionKey: 'unique_page_key',          // Unique key for session storage
+    safeHarborKey: null,                    // Separate key for Safe Harbor acceptance
     
     // Styling Options
     useDefaultStyles: true,                 // Use built-in CSS styles
@@ -118,11 +131,53 @@ MultiaxisProtection.init({
     // Callback Functions
     onSuccess: function() {},               // Called on successful verification
     onError: function(attempt) {},          // Called on failed attempt
-    beforeCheck: function(answer) {}        // Called before checking answer
+    beforeCheck: function(answer) {},       // Called before checking answer
+    onSafeHarborAccept: function() {},     // Called when Safe Harbor accepted (NEW)
+    onSafeHarborDecline: function() {}     // Called when Safe Harbor declined (NEW)
 });
 ```
 
 ## Advanced Examples
+
+### Safe Harbor Legal Disclaimers (NEW in v1.0.0)
+
+Enable a two-step verification process with legal disclaimers for sensitive content:
+
+```javascript
+MultiaxisProtection.init({
+    title: 'Partnership Documents',
+    sessionKey: 'partnership_access',
+    
+    // Enable Safe Harbor feature
+    enableSafeHarbor: true,
+    safeHarborTitle: 'Legal Disclaimer & Terms',
+    safeHarborDate: 'December 31, 2025',
+    
+    // Optional: Use custom legal text
+    safeHarborText: `
+        <p><strong>Custom Legal Notice:</strong> Your custom legal text here...</p>
+        <p>Additional paragraphs of legal disclaimers...</p>
+    `,
+    
+    // Track acceptance
+    onSafeHarborAccept: function() {
+        console.log('Legal terms accepted at:', new Date().toISOString());
+        // Log to your analytics or compliance system
+    },
+    onSafeHarborDecline: function() {
+        console.log('User declined legal terms');
+        // Handle declined access
+    }
+});
+```
+
+The Safe Harbor feature includes:
+- Forward-looking statement disclaimers
+- Third-party information disclaimers
+- Antitrust compliance notices
+- Customizable expiration dates
+- Checkbox confirmation requirement
+- Separate session tracking
 
 ### Custom Styling
 
@@ -202,9 +257,10 @@ Clears the session storage and reloads the page, requiring re-verification.
 
 1. **Initial Load**: The module hides protected content and displays a verification modal
 2. **Human Verification**: Users must type the company name (default: "MULTIAXIS")
-3. **Session Storage**: Successful verification is stored in the browser session
-4. **Content Access**: Protected content becomes visible after verification
-5. **Persistence**: Users don't need to re-verify during the same session
+3. **Safe Harbor (Optional)**: If enabled, users must accept legal disclaimers after verification
+4. **Session Storage**: Successful verification is stored in the browser session
+5. **Content Access**: Protected content becomes visible after all requirements are met
+6. **Persistence**: Users don't need to re-verify during the same session
 
 ## Browser Compatibility
 
@@ -277,10 +333,13 @@ Developed by Multiaxis LLC to protect valuable content from automated scraping w
 
 ## Changelog
 
-### Version 1.0.0 (2024)
-- Initial release
-- Basic protection functionality
-- Session persistence
-- Customizable configuration
-- Default styling included
-- Callback support for analytics
+### Version 1.0.0 (January 20, 2024)
+- Initial public release
+- Basic protection functionality with human verification
+- Safe Harbor legal disclaimer feature
+- Session persistence for both protection and legal acceptance
+- Customizable configuration for all text and styling
+- Default styling included with override capabilities
+- Callback support for analytics and compliance tracking
+- Mobile responsive design
+- Accessibility features
