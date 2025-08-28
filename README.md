@@ -151,7 +151,7 @@ MultiaxisProtection.init({
     // Enable Safe Harbor feature
     enableSafeHarbor: true,
     safeHarborTitle: 'Legal Disclaimer & Terms',
-    safeHarborDate: 'December 31, 2025',
+    safeHarborDate: 'January 1, 2025',
     
     // Optional: Use custom legal text
     safeHarborText: `
@@ -289,7 +289,7 @@ This project is licensed under the MIT License - see below for details:
 ```
 MIT License
 
-Copyright (c) 2024 Multiaxis LLC
+Copyright (C)2025 Multiaxis LLC. All rights reserved | The Power of MULTIAXIS(R) with the Intelligence of ARLO(TM)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -333,7 +333,7 @@ Developed by Multiaxis LLC to protect valuable content from automated scraping w
 
 ## Changelog
 
-### Version 1.0.0 (January 20, 2024)
+### Version 1.0.0 (August 28, 2025)
 - Initial public release
 - Basic protection functionality with human verification
 - Safe Harbor legal disclaimer feature
