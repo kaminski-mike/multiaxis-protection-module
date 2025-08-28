@@ -3,13 +3,13 @@
  * A reusable security module to protect pages from AI scrapers and unauthorized access
  * 
  * @version 1.0.0
- * @date 2024-01-20
+ * @date 2025-01-01
  * @author Mike Kaminski
  * @company Multiaxis LLC
  * @website https://multiaxis.ai
  * @license MIT
  * 
- * Copyright (c) 2024 Multiaxis LLC
+ * Copyright (C)2025 Multiaxis LLC. All rights reserved | The Power of MULTIAXIS(R) with the Intelligence of ARLO(TM)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,10 +54,17 @@ const MultiaxisProtection = (function() {
         footerText: 'This human verification helps us maintain content quality and security.',
         
         // Accepted answers
-        acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS AI'],
+        acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS INTELLIGENCE'],
+        
+        // Safe Harbor configuration
+        enableSafeHarbor: false,
+        safeHarborTitle: 'Important Legal Notice',
+        safeHarborDate: 'January 1, 2025',
+        safeHarborText: null, // Will use default if not provided
         
         // Session configuration
         sessionKey: 'multiaxis_protection',
+        safeHarborKey: null, // Will be auto-generated from sessionKey if not provided
         
         // Styling configuration
         useDefaultStyles: true,
@@ -66,10 +73,68 @@ const MultiaxisProtection = (function() {
         // Callbacks
         onSuccess: null,
         onError: null,
-        beforeCheck: null
+        beforeCheck: null,
+        onSafeHarborAccept: null,
+        onSafeHarborDecline: null
     };
     
     let config = {};
+    
+    // Get default Safe Harbor text
+    function getDefaultSafeHarborText(date) {
+        return `
+            <p><strong>Forward-Looking Statements:</strong> Multiaxis may make statements regarding planned or future development efforts for our existing or new products and services. These statements are not intended to be a promise or guarantee of business results, future availability of products, services or features but merely reflect our current plans and are based on factors currently known to us. These planned and future development efforts may change without notice. Purchasing and investment decisions should not be made based upon reliance on these statements.</p>
+            
+            <p>Multiaxis assumes no obligations to update these forward-looking statements to reflect events that occur or circumstances that exist or change after the date on which they were made. If this presentation is reviewed after ${date}, these statements may no longer contain current or accurate information.</p>
+            
+            <p><strong>Third-Party Information:</strong> This presentation also contains information, opinions and data supplied by third parties and Multiaxis assumes no responsibilities for the accuracy or completeness of such information, opinions or data, and shall not be liable for any decisions made based upon reliance on any such information, opinions or data.</p>
+            
+            <p><strong>Antitrust Compliance:</strong> Multiaxis's partners may compete against each other in the marketplace, and it is critically important that all participants in this meeting observe all requirements of antitrust laws and other laws regarding unfair competition. Multiaxis's insistence upon full compliance with all legal requirements in the antitrust field has not been based solely on the desire to stay within the bounds of the law, but also on the conviction that the preservation of a free and vigorous competitive economy is essential to the welfare of our business and that of our partners, the markets they serve, and the countries in which they operate.</p>
+            
+            <p>It is against the policy of Multiaxis to sponsor, encourage or tolerate any discussion or communication among any of its partners concerning past, present or future prices, pricing policies, bids, discounts, promotions, terms or conditions of sale, choice of customers, territorial markets, quotas, inventory, allocation of markets, products or services, boycotts and refusals to deal, or any proprietary or confidential information. Communications of this type should not occur, whether written, oral, formal, informal or "off the record". All discussions at this meeting should be strictly limited to presentation topics.</p>
+        `;
+    }
+    
+    // Create Safe Harbor modal HTML
+    function createSafeHarborModal() {
+        const modal = document.createElement('div');
+        modal.id = 'safeHarborModal';
+        modal.className = 'safe-harbor-modal';
+        modal.innerHTML = `
+            <div class="safe-harbor-container">
+                <h2 class="safe-harbor-title">
+                    <span class="legal-icon">⚖️</span>
+                    <span>${config.safeHarborTitle}</span>
+                </h2>
+                
+                <div class="safe-harbor-content">
+                    ${config.safeHarborText || getDefaultSafeHarborText(config.safeHarborDate)}
+                </div>
+                
+                <div class="safe-harbor-acknowledgment">
+                    <label class="safe-harbor-checkbox-label">
+                        <input type="checkbox" id="safeHarborCheckbox" class="safe-harbor-checkbox">
+                        <span>I have read and understand these important legal notices and agree to proceed under these terms.</span>
+                    </label>
+                </div>
+                
+                <div class="safe-harbor-buttons">
+                    <button class="safe-harbor-decline" id="safeHarborDecline">
+                        Decline & Exit
+                    </button>
+                    <button class="safe-harbor-accept" id="safeHarborAccept" disabled>
+                        Accept & Continue
+                    </button>
+                </div>
+                
+                <div class="safe-harbor-footer">
+                    <p>Date of Notice: ${config.safeHarborDate}</p>
+                </div>
+            </div>
+        `;
+        
+        return modal;
+    }
     
     // Create protection modal HTML
     function createModal() {
@@ -134,7 +199,7 @@ const MultiaxisProtection = (function() {
     // Create default styles
     function createStyles() {
         const styles = `
-            .protection-modal {
+            .protection-modal, .safe-harbor-modal {
                 display: flex;
                 position: fixed;
                 top: 0;
@@ -148,11 +213,11 @@ const MultiaxisProtection = (function() {
                 backdrop-filter: blur(5px);
             }
 
-            .protection-modal.hidden {
+            .protection-modal.hidden, .safe-harbor-modal.hidden {
                 display: none;
             }
 
-            .protection-container {
+            .protection-container, .safe-harbor-container {
                 background: white;
                 padding: 40px;
                 border-radius: 15px;
@@ -160,9 +225,16 @@ const MultiaxisProtection = (function() {
                 max-width: 500px;
                 width: 90%;
                 text-align: center;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            .safe-harbor-container {
+                max-width: 700px;
+                text-align: left;
             }
 
-            .protection-title {
+            .protection-title, .safe-harbor-title {
                 color: #2c5e82;
                 margin-bottom: 20px;
                 font-size: 24px;
@@ -173,7 +245,7 @@ const MultiaxisProtection = (function() {
                 font-weight: bold;
             }
 
-            .shield-icon {
+            .shield-icon, .legal-icon {
                 font-size: 32px;
             }
 
@@ -253,7 +325,7 @@ const MultiaxisProtection = (function() {
                 font-style: italic;
             }
 
-            .protection-submit {
+            .protection-submit, .safe-harbor-accept, .safe-harbor-decline {
                 background: #5B9BD5;
                 color: white;
                 border: none;
@@ -267,13 +339,28 @@ const MultiaxisProtection = (function() {
                 min-width: 150px;
             }
 
-            .protection-submit:hover {
+            .protection-submit:hover, .safe-harbor-accept:hover:not(:disabled) {
                 background: #4a8bc2;
             }
 
-            .protection-submit:active {
+            .protection-submit:active, .safe-harbor-accept:active:not(:disabled) {
                 box-shadow: 0 3px #666;
                 transform: translateY(3px);
+            }
+            
+            .safe-harbor-decline {
+                background: #dc3545;
+                margin-right: 10px;
+            }
+            
+            .safe-harbor-decline:hover {
+                background: #c82333;
+            }
+            
+            .safe-harbor-accept:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+                box-shadow: none;
             }
 
             .protection-error {
@@ -284,12 +371,66 @@ const MultiaxisProtection = (function() {
                 font-weight: 500;
             }
 
-            .protection-footer {
+            .protection-footer, .safe-harbor-footer {
                 margin-top: 25px;
                 padding-top: 20px;
                 border-top: 1px solid #e0e0e0;
                 font-size: 13px;
                 color: #999;
+            }
+            
+            .safe-harbor-content {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                max-height: 400px;
+                overflow-y: auto;
+                border: 1px solid #dee2e6;
+            }
+            
+            .safe-harbor-content p {
+                margin-bottom: 15px;
+                line-height: 1.6;
+                font-size: 14px;
+                color: #495057;
+            }
+            
+            .safe-harbor-content p:last-child {
+                margin-bottom: 0;
+            }
+            
+            .safe-harbor-content strong {
+                color: #2c5e82;
+            }
+            
+            .safe-harbor-acknowledgment {
+                background: #fff3cd;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border: 1px solid #ffc107;
+            }
+            
+            .safe-harbor-checkbox-label {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                cursor: pointer;
+                font-size: 14px;
+                color: #856404;
+            }
+            
+            .safe-harbor-checkbox {
+                margin-top: 3px;
+                cursor: pointer;
+            }
+            
+            .safe-harbor-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 20px;
             }
 
             #protectedContent {
@@ -307,17 +448,26 @@ const MultiaxisProtection = (function() {
             }
 
             @media (max-width: 768px) {
-                .protection-container {
+                .protection-container, .safe-harbor-container {
                     padding: 30px 20px;
                     width: 95%;
                 }
 
-                .protection-title {
+                .protection-title, .safe-harbor-title {
                     font-size: 20px;
                 }
 
                 .challenge-text {
                     font-size: 16px;
+                }
+                
+                .safe-harbor-buttons {
+                    flex-direction: column;
+                }
+                
+                .safe-harbor-decline {
+                    margin-right: 0;
+                    margin-bottom: 10px;
                 }
             }
         `;
@@ -348,17 +498,20 @@ const MultiaxisProtection = (function() {
             // Hide protection modal
             document.getElementById(config.modalId).classList.add('hidden');
             
-            // Show protected content
-            const protectedContent = document.getElementById(config.protectedContentId);
-            if (protectedContent) {
-                protectedContent.classList.add('authorized');
+            // Check if Safe Harbor is enabled
+            if (config.enableSafeHarbor) {
+                // Show Safe Harbor modal instead of content
+                showSafeHarborModal();
+            } else {
+                // Show protected content directly
+                showProtectedContent();
             }
             
             // Clear input
             input.value = '';
             errorMsg.style.display = 'none';
             
-            // Set session storage
+            // Set session storage for protection
             sessionStorage.setItem(config.sessionKey, 'granted');
             
             // Run success callback if provided
@@ -384,21 +537,91 @@ const MultiaxisProtection = (function() {
         }
     }
     
+    // Show Safe Harbor modal
+    function showSafeHarborModal() {
+        const modal = document.getElementById('safeHarborModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            
+            // Set up event listeners for Safe Harbor
+            const checkbox = document.getElementById('safeHarborCheckbox');
+            const acceptBtn = document.getElementById('safeHarborAccept');
+            const declineBtn = document.getElementById('safeHarborDecline');
+            
+            checkbox.addEventListener('change', function() {
+                acceptBtn.disabled = !this.checked;
+            });
+            
+            acceptBtn.addEventListener('click', function() {
+                if (checkbox.checked) {
+                    // Hide Safe Harbor modal
+                    modal.classList.add('hidden');
+                    // Show protected content
+                    showProtectedContent();
+                    // Set Safe Harbor accepted in session
+                    sessionStorage.setItem(config.safeHarborKey || config.sessionKey + '_safeharbor', 'accepted');
+                    
+                    // Run Safe Harbor accept callback
+                    if (config.onSafeHarborAccept && typeof config.onSafeHarborAccept === 'function') {
+                        config.onSafeHarborAccept();
+                    }
+                }
+            });
+            
+            declineBtn.addEventListener('click', function() {
+                // Clear sessions and reload
+                sessionStorage.removeItem(config.sessionKey);
+                sessionStorage.removeItem(config.safeHarborKey || config.sessionKey + '_safeharbor');
+                
+                // Run Safe Harbor decline callback
+                if (config.onSafeHarborDecline && typeof config.onSafeHarborDecline === 'function') {
+                    config.onSafeHarborDecline();
+                }
+                
+                // Reload the page
+                location.reload();
+            });
+        }
+    }
+    
+    // Show protected content
+    function showProtectedContent() {
+        const protectedContent = document.getElementById(config.protectedContentId);
+        if (protectedContent) {
+            protectedContent.classList.add('authorized');
+        }
+    }
+    
     // Check if user already has access
     function checkExistingAccess() {
-        if (sessionStorage.getItem(config.sessionKey) === 'granted') {
+        const hasProtectionAccess = sessionStorage.getItem(config.sessionKey) === 'granted';
+        const safeHarborKey = config.safeHarborKey || config.sessionKey + '_safeharbor';
+        const hasSafeHarborAccess = !config.enableSafeHarbor || sessionStorage.getItem(safeHarborKey) === 'accepted';
+        
+        if (hasProtectionAccess && hasSafeHarborAccess) {
+            // User has completed all requirements
             const modal = document.getElementById(config.modalId);
             if (modal) {
                 modal.classList.add('hidden');
             }
             
-            const protectedContent = document.getElementById(config.protectedContentId);
-            if (protectedContent) {
-                protectedContent.classList.add('authorized');
+            const safeHarborModal = document.getElementById('safeHarborModal');
+            if (safeHarborModal) {
+                safeHarborModal.classList.add('hidden');
             }
             
+            showProtectedContent();
             return true;
+        } else if (hasProtectionAccess && config.enableSafeHarbor && !hasSafeHarborAccess) {
+            // User passed protection but needs Safe Harbor
+            const modal = document.getElementById(config.modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            showSafeHarborModal();
+            return false;
         }
+        
         return false;
     }
     
@@ -429,13 +652,19 @@ const MultiaxisProtection = (function() {
             document.head.appendChild(customStyleSheet);
         }
         
-        // Create and add modal
+        // Create and add protection modal
         const modal = createModal();
         document.body.appendChild(modal);
         
+        // Create and add Safe Harbor modal if enabled
+        if (config.enableSafeHarbor) {
+            const safeHarborModal = createSafeHarborModal();
+            document.body.appendChild(safeHarborModal);
+        }
+        
         // Check existing access
         if (!checkExistingAccess()) {
-            // Set up event listeners
+            // Set up event listeners for protection
             const submitButton = document.getElementById('protectionSubmit');
             if (submitButton) {
                 submitButton.addEventListener('click', checkAccess);
@@ -481,5 +710,4 @@ document.addEventListener('DOMContentLoaded', function() {
         
         MultiaxisProtection.init(config);
     }
-
 });
