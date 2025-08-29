@@ -54,13 +54,13 @@ const MultiaxisProtection = (function() {
         footerText: 'This human verification helps us maintain content quality and security.',
         
         // Accepted answers
-        acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS INTELLIGENCE'],
+        acceptedAnswers: ['MULTIAXIS', 'MULTIAXIS LLC', 'MULTIAXIS AI'],
         
         // Safe Harbor configuration - ENABLED BY DEFAULT
         enableSafeHarbor: true,
         safeHarborTitle: 'Important Legal Notice',
         safeHarborDate: null, // null = use today's date, or provide specific date string
-        safeHarborDaysValid: 90, // Number of days the disclaimer remains valid
+        safeHarborDaysValid: 30, // Number of days the disclaimer remains valid
         safeHarborText: null, // Will use default if not provided
         
         // Session configuration
@@ -114,25 +114,27 @@ const MultiaxisProtection = (function() {
         
         return `
             <p><strong>Website Terms & Conditions:</strong> This website and its content are proprietary to Multiaxis LLC. By accessing this protected content, you acknowledge and agree to the following terms.</p>
-            
+    
             <p><strong>Proprietary Information:</strong> All content, technical documentation, whitepapers, and materials on this site are the intellectual property of Multiaxis LLC. Unauthorized reproduction, distribution, or use is strictly prohibited.</p>
-            
-            <p><strong>Forward-Looking Statements:</strong> This site may contain statements about future product developments, features, or capabilities. These statements reflect our current plans based on information available today and may change without notice. They should not be interpreted as commitments or guarantees of future functionality.</p>
-            
-            <p><strong>Third-Party References:</strong> We may reference partner companies, technologies, or products for informational purposes only. These references do not imply endorsement, and we are not responsible for third-party products or services. All third-party trademarks are the property of their respective owners.</p>
-            
-            <p><strong>Disclaimer of Warranties:</strong> Content is provided "as is" without warranties of any kind. Multiaxis LLC assumes no liability for the accuracy, completeness, or usefulness of any information provided. If this content is accessed after ${expirationDate}, information may be outdated or no longer accurate.</p>
-            
+    
+            <p><strong>Forward-Looking Statements:</strong> This site may contain statements regarding planned or future product developments, features, or capabilities. These statements reflect our current plans based on information available today and are not a promise or guarantee of business results, future availability, or functionality. Purchasing, partnership, or investment decisions should not be made in reliance on these statements. Multiaxis LLC assumes no obligation to update forward-looking statements to reflect events or changes after the date on which they are made. If this content is accessed after ${expirationDate}, information may be outdated or no longer accurate.</p>
+    
+            <p><strong>Third-Party References:</strong> We may reference partner companies, technologies, or products for informational purposes only. These references do not imply endorsement. Information, opinions, or data provided by third parties are their responsibility, and Multiaxis LLC makes no representations or warranties regarding accuracy or completeness. All third-party trademarks are the property of their respective owners.</p>
+    
+            <p><strong>Disclaimer of Warranties:</strong> Content is provided "as is" without warranties of any kind. Multiaxis LLC assumes no liability for the accuracy, completeness, or usefulness of any information provided.</p>
+    
             <p><strong>Acceptable Use:</strong> By proceeding, you agree to use this content only for legitimate business purposes and not for competitive analysis, reverse engineering, or any unauthorized purpose. You may not use automated tools, scrapers, or bots to access this content.</p>
-            
+    
             <p><strong>Confidentiality:</strong> Some content may contain confidential or proprietary information. You agree to maintain the confidentiality of such information and not disclose it to unauthorized parties.</p>
         `;
+
     }
-    
+  
     // Create Safe Harbor modal HTML
     function createSafeHarborModal() {
         const currentDate = getSafeHarborDate();
-        
+        const safeHarborKey = config.safeHarborKey || config.sessionKey + '_safeharbor';
+    
         const modal = document.createElement('div');
         modal.id = 'safeHarborModal';
         modal.className = 'safe-harbor-modal';
@@ -142,33 +144,36 @@ const MultiaxisProtection = (function() {
                     <span class="legal-icon">⚖️</span>
                     <span>${config.safeHarborTitle}</span>
                 </h2>
-                
+            
                 <div class="safe-harbor-content">
                     ${config.safeHarborText || getDefaultSafeHarborText()}
                 </div>
-                
+            
                 <div class="safe-harbor-acknowledgment">
                     <label class="safe-harbor-checkbox-label">
-                        <input type="checkbox" id="safeHarborCheckbox" class="safe-harbor-checkbox">
+                        <input type="checkbox" id="safeHarborCheckbox" class="safe-harbor-checkbox"
+                               onchange="document.getElementById('safeHarborAccept').disabled = !this.checked; console.log('Checkbox changed:', this.checked);">
                         <span>I have read and understand these important legal notices and agree to proceed under these terms.</span>
                     </label>
                 </div>
-                
+            
                 <div class="safe-harbor-buttons">
-                    <button class="safe-harbor-decline" id="safeHarborDecline">
+                    <button class="safe-harbor-decline" id="safeHarborDecline"
+                            onclick="console.log('Decline clicked'); sessionStorage.clear(); window.location.href='/';">
                         Decline & Exit
                     </button>
-                    <button class="safe-harbor-accept" id="safeHarborAccept" disabled>
+                    <button class="safe-harbor-accept" id="safeHarborAccept" disabled
+                            onclick="console.log('Accept clicked'); if(document.getElementById('safeHarborCheckbox').checked) { document.getElementById('safeHarborModal').classList.add('hidden'); document.getElementById('protectedContent').classList.add('authorized'); sessionStorage.setItem('${safeHarborKey}', 'accepted'); }">
                         Accept & Continue
                     </button>
                 </div>
-                
+            
                 <div class="safe-harbor-footer">
                     <p>Date of Notice: ${currentDate}</p>
                 </div>
             </div>
-        `;
-        
+    `    ;
+    
         return modal;
     }
     
@@ -373,6 +378,9 @@ const MultiaxisProtection = (function() {
                 transition: all 0.3s ease;
                 box-shadow: 0 6px #999;
                 min-width: 150px;
+                position: relative;
+                z-index: 10001;
+                pointer-events: auto !important;
             }
 
             .protection-submit:hover, .safe-harbor-accept:hover:not(:disabled) {
@@ -397,6 +405,15 @@ const MultiaxisProtection = (function() {
                 background: #ccc;
                 cursor: not-allowed;
                 box-shadow: none;
+            }
+
+            .safe-harbor-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 20px;
+                position: relative;
+                z-index: 10001;
             }
 
             .protection-error {
@@ -460,13 +477,6 @@ const MultiaxisProtection = (function() {
             .safe-harbor-checkbox {
                 margin-top: 3px;
                 cursor: pointer;
-            }
-            
-            .safe-harbor-buttons {
-                display: flex;
-                justify-content: center;
-                gap: 10px;
-                margin-top: 20px;
             }
 
             #protectedContent {
@@ -572,7 +582,7 @@ const MultiaxisProtection = (function() {
             }
         }
     }
-    
+
     // Show Safe Harbor modal
     function showSafeHarborModal() {
         const modal = document.getElementById('safeHarborModal');
@@ -580,70 +590,22 @@ const MultiaxisProtection = (function() {
             console.error('Safe Harbor modal not found');
             return;
         }
-        
+    
         modal.classList.remove('hidden');
-        
-        // Get elements
+    
+        // Reset checkbox state
         const checkbox = document.getElementById('safeHarborCheckbox');
-        const acceptBtn = document.getElementById('safeHarborAccept');
-        const declineBtn = document.getElementById('safeHarborDecline');
-        
-        if (!checkbox || !acceptBtn || !declineBtn) {
-            console.error('Safe Harbor elements not found');
-            return;
+        if (checkbox) {
+            checkbox.checked = false;
         }
-        
-        // Remove any existing event listeners first
-        const newCheckbox = checkbox.cloneNode(true);
-        checkbox.parentNode.replaceChild(newCheckbox, checkbox);
-        const newAcceptBtn = acceptBtn.cloneNode(true);
-        acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
-        const newDeclineBtn = declineBtn.cloneNode(true);
-        declineBtn.parentNode.replaceChild(newDeclineBtn, declineBtn);
-        
-        // Re-get the new elements
-        const finalCheckbox = document.getElementById('safeHarborCheckbox');
-        const finalAcceptBtn = document.getElementById('safeHarborAccept');
-        const finalDeclineBtn = document.getElementById('safeHarborDecline');
-        
-        // Add event listener for checkbox
-        finalCheckbox.addEventListener('change', function() {
-            finalAcceptBtn.disabled = !this.checked;
-        });
-        
-        // Add event listener for accept button
-        finalAcceptBtn.addEventListener('click', function() {
-            if (finalCheckbox.checked) {
-                // Hide Safe Harbor modal
-                modal.classList.add('hidden');
-                // Show protected content
-                showProtectedContent();
-                // Set Safe Harbor accepted in session
-                const safeHarborSessionKey = config.safeHarborKey || config.sessionKey + '_safeharbor';
-                sessionStorage.setItem(safeHarborSessionKey, 'accepted');
-                
-                // Run Safe Harbor accept callback
-                if (config.onSafeHarborAccept && typeof config.onSafeHarborAccept === 'function') {
-                    config.onSafeHarborAccept();
-                }
-            }
-        });
-        
-        // Add event listener for decline button
-        finalDeclineBtn.addEventListener('click', function() {
-            // Clear sessions
-            sessionStorage.removeItem(config.sessionKey);
-            const safeHarborSessionKey = config.safeHarborKey || config.sessionKey + '_safeharbor';
-            sessionStorage.removeItem(safeHarborSessionKey);
-            
-            // Run Safe Harbor decline callback
-            if (config.onSafeHarborDecline && typeof config.onSafeHarborDecline === 'function') {
-                config.onSafeHarborDecline();
-            }
-            
-            // Reload the page
-            location.reload();
-        });
+    
+        // Reset button state
+        const acceptBtn = document.getElementById('safeHarborAccept');
+        if (acceptBtn) {
+            acceptBtn.disabled = true;
+        }
+    
+        console.log('Safe Harbor modal shown with inline handlers');
     }
     
     // Show protected content
@@ -658,32 +620,28 @@ const MultiaxisProtection = (function() {
     function checkExistingAccess() {
         const hasProtectionAccess = sessionStorage.getItem(config.sessionKey) === 'granted';
         const safeHarborKey = config.safeHarborKey || config.sessionKey + '_safeharbor';
-        const hasSafeHarborAccess = !config.enableSafeHarbor || sessionStorage.getItem(safeHarborKey) === 'accepted';
-        
-        if (hasProtectionAccess && hasSafeHarborAccess) {
-            // User has completed all requirements
+        const hasSafeHarborAccess = sessionStorage.getItem(safeHarborKey) === 'accepted';
+    
+        // Only skip modals if user has completed BOTH
+        if (hasProtectionAccess && (!config.enableSafeHarbor || hasSafeHarborAccess)) {
             const modal = document.getElementById(config.modalId);
             if (modal) {
                 modal.classList.add('hidden');
             }
-            
+        
             const safeHarborModal = document.getElementById('safeHarborModal');
             if (safeHarborModal) {
                 safeHarborModal.classList.add('hidden');
             }
-            
+        
             showProtectedContent();
             return true;
-        } else if (hasProtectionAccess && config.enableSafeHarbor && !hasSafeHarborAccess) {
-            // User passed protection but needs Safe Harbor
-            const modal = document.getElementById(config.modalId);
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-            showSafeHarborModal();
-            return false;
         }
-        
+    
+        // Otherwise, clear any partial progress and start fresh
+        sessionStorage.removeItem(config.sessionKey);
+        sessionStorage.removeItem(safeHarborKey);
+    
         return false;
     }
     
@@ -699,39 +657,67 @@ const MultiaxisProtection = (function() {
             setup();
         }
     }
-    
+
     // Setup protection
     function setup() {
         // Add styles if needed
         if (config.useDefaultStyles) {
             document.head.appendChild(createStyles());
         }
-        
+
         // Add custom styles if provided
         if (config.customStyles) {
             const customStyleSheet = document.createElement('style');
             customStyleSheet.textContent = config.customStyles;
             document.head.appendChild(customStyleSheet);
         }
-        
+
         // Create and add protection modal
         const modal = createModal();
         document.body.appendChild(modal);
-        
+
         // Create and add Safe Harbor modal if enabled
         if (config.enableSafeHarbor) {
             const safeHarborModal = createSafeHarborModal();
             document.body.appendChild(safeHarborModal);
+            // Make sure it starts hidden
+            safeHarborModal.classList.add('hidden');
         }
+
+        // Check if user has COMPLETE access (both protection and safe harbor if enabled)
+        const hasProtectionAccess = sessionStorage.getItem(config.sessionKey) === 'granted';
+        const safeHarborKey = config.safeHarborKey || config.sessionKey + '_safeharbor';
+        const hasSafeHarborAccess = sessionStorage.getItem(safeHarborKey) === 'accepted';
+
+        // Only skip everything if user has completed ALL required steps
+        if (hasProtectionAccess && (!config.enableSafeHarbor || hasSafeHarborAccess)) {
+            // User has completed everything - hide modals and show content
+            modal.classList.add('hidden');
+            const safeHarborModal = document.getElementById('safeHarborModal');
+            if (safeHarborModal) {
+                safeHarborModal.classList.add('hidden');
+            }
+            showProtectedContent();
+        } else {
+            // Clear any partial progress and start fresh
+            sessionStorage.removeItem(config.sessionKey);
+            sessionStorage.removeItem(safeHarborKey);
         
-        // Check existing access
-        if (!checkExistingAccess()) {
+            // Make sure Safe Harbor modal is hidden initially
+            const safeHarborModal = document.getElementById('safeHarborModal');
+            if (safeHarborModal) {
+                safeHarborModal.classList.add('hidden');
+            }
+        
+            // Show protection modal (MULTIAXIS challenge)
+            modal.classList.remove('hidden');
+        
             // Set up event listeners for protection
             const submitButton = document.getElementById('protectionSubmit');
             if (submitButton) {
                 submitButton.addEventListener('click', checkAccess);
             }
-            
+        
             const input = document.getElementById('protectionInput');
             if (input) {
                 input.addEventListener('keypress', function(e) {
@@ -739,7 +725,7 @@ const MultiaxisProtection = (function() {
                         checkAccess();
                     }
                 });
-                
+            
                 // Focus input
                 setTimeout(() => input.focus(), 100);
             }
@@ -773,3 +759,13 @@ document.addEventListener('DOMContentLoaded', function() {
         MultiaxisProtection.init(config);
     }
 });
+
+
+
+
+
+
+
+
+
+
